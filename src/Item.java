@@ -1,7 +1,7 @@
 /**
  * An item in a grocery store: Jar of peanut butter, package of pasta, whatever.
  */
-public class Item {
+public class Item implements Element {
 
 	private final String aName;
 	private final int aId;
@@ -42,6 +42,11 @@ public class Item {
 	 */
 	public int getPrice() {
 		return aPrice;
+	}
+
+	@Override
+	public void accept(Visitor pVisitor) {
+		pVisitor.visitItem(this);
 	}
 
 }

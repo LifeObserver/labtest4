@@ -18,7 +18,7 @@ public final class Driver {
 	 * @param pArgs
 	 *            Not used
 	 */
-	public static void main(String[] pArgs) {
+	public static void main(String[] pArgs) throws InterruptedException {
 		Random random = new Random();
 		Inventory inventory1 = new Inventory("IGA Location 1");
 		Inventory inventory2 = new Inventory("IGA Location 2");
@@ -32,6 +32,21 @@ public final class Driver {
 		iga.addInventory(inventory1);
 		iga.addInventory(inventory2);
 		iga.addInventory(inventory3);
+		// test visitor pattern
+		PrintVisitor printVisitor = new PrintVisitor();
+		iga.accept(printVisitor);
+		// test concurrency
+		Item item = new Item("Chocolate", 4, 1000);
+		Inventory inventory = new Inventory("MyInventory");
+		Thread thread1 = new MyThread(inventory, item);
+		Thread thread2 = new MyThread(inventory, item);
+		thread1.start();
+		thread2.start();
+		thread1.join();
+		thread2.join();
+		int expected = 2000000;
+		int actual = inventory.available(item);
+		System.out.println("\nexpected=" + expected + ", actual=" + actual + ", equal=" + (expected == actual));
 	}
 
 }

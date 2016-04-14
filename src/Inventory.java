@@ -4,7 +4,7 @@ import java.util.Iterator;
 /**
  * Represents the inventory of a physical grocery store.
  */
-public class Inventory implements Iterable<Item> {
+public class Inventory implements Iterable<Item>, Element {
 
 	private final String aName; // Unique
 	private final HashMap<Item, Integer> aInventory = new HashMap<>();
@@ -35,13 +35,14 @@ public class Inventory implements Iterable<Item> {
 	 * @param pQuantity
 	 *            The amount to add.
 	 */
-	public void stock(Item pItem, int pQuantity) {
+	public synchronized void stock(Item pItem, int pQuantity) {
 		int amount = 0;
 		if (aInventory.containsKey(pItem)) {
 			amount = aInventory.get(pItem);
 		}
 		amount += pQuantity;
 		aInventory.put(pItem, amount);
+		notifyAll();
 	}
 
 	/**
@@ -52,9 +53,11 @@ public class Inventory implements Iterable<Item> {
 	 *            The type of item to dispose of
 	 * @param pQuantity
 	 *            The amount to dispose.
-	 * @pre aInventory.containsKey(pItem) && pQuantity >= aInventory.get(pItem)
 	 */
-	public void dispose(Item pItem, int pQuantity) {
+	public synchronized void dispose(Item pItem, int pQuantity) throws InterruptedException {
+		while (!aInventory.containsKey(pItem) || pQuantity > aInventory.get(pItem)) {
+			wait();
+		}
 		int amount = aInventory.get(pItem);
 		amount -= pQuantity;
 		aInventory.put(pItem, amount);
@@ -65,7 +68,7 @@ public class Inventory implements Iterable<Item> {
 	 *            The item to check for availability.
 	 * @return How many of the items are available in the inventory.
 	 */
-	public int available(Item pItem) {
+	public synchronized int available(Item pItem) {
 		if (aInventory.containsKey(pItem)) {
 			return aInventory.get(pItem);
 		} else {
@@ -74,8 +77,13 @@ public class Inventory implements Iterable<Item> {
 	}
 
 	@Override
-	public Iterator<Item> iterator() {
+	public synchronized Iterator<Item> iterator() {
 		return aInventory.keySet().iterator();
+	}
+
+	@Override
+	public void accept(Visitor pVisitor) {
+		pVisitor.visitInventory(this);
 	}
 
 }
